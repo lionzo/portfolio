@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Scheduling Flow — Marcelo Lionço Mendes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --black: #000000;
+      --near-black: #0a0a0a;
+      --card-bg: #111111;
+      --card-bg-soft: #151515;
+      --border: rgba(255,255,255,0.08);
+      --white: #ffffff;
+      --white-70: rgba(255,255,255,0.72);
+      --white-60: rgba(255,255,255,0.6);
+      --white-30: rgba(255,255,255,0.3);
+      --white-10: rgba(255,255,255,0.07);
+      --accent: #0a84ff;
+      --accent-glow: rgba(10,132,255,0.22);
+      --green: #30d158;
+      --purple: #5d1aa3;
+      --purple-deep: #240547;
+      --nav-bg: rgba(0,0,0,0.72);
+      --nav-border-active: rgba(255,255,255,0.12);
+      --surface-shadow: rgba(0,0,0,0.62);
+      --serif: "Playfair Display", Georgia, serif;
+      --sans: "DM Sans", system-ui, sans-serif;
+      --max-width: 1180px;
+    }
+
+    body[data-theme="light"] {
+      --black: #f7f8fb;
+      --near-black: #ffffff;
+      --card-bg: #ffffff;
+      --card-bg-soft: #f1f5f9;
+      --border: rgba(2,2,3,0.1);
+      --white: #15171d;
+      --white-70: rgba(21,23,29,0.72);
+      --white-60: rgba(21,23,29,0.64);
+      --white-30: rgba(21,23,29,0.34);
+      --white-10: rgba(10,132,255,0.08);
+      --accent-glow: rgba(10,132,255,0.16);
+      --green: #198f3f;
+      --purple: #0a84ff;
+      --purple-deep: #dbeafe;
+      --nav-bg: rgba(247,248,251,0.78);
+      --nav-border-active: rgba(10,132,255,0.24);
+      --surface-shadow: rgba(21,23,29,0.16);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top, rgba(93,26,163,0.18), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(10,132,255,0.12), transparent 24%),
+        var(--black);
+      color: var(--white);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body[data-theme="light"] {
+      background:
+        radial-gradient(circle at top, rgba(10,132,255,0.12), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(48,209,88,0.08), transparent 24%),
+        var(--black);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.32;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 48px;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .nav-logo {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-links a {
+      color: var(--white-60);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.2px;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--white);
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 980px;
+      border: 1px solid var(--border);
+      background: var(--white-10);
+    }
+
+    .nav-cta {
+      background: var(--white);
+      color: var(--black) !important;
+      padding: 8px 20px;
+      border-radius: 980px;
+      font-weight: 500 !important;
+    }
+
+    .theme-toggle {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 980px;
+      background: var(--white-10);
+      color: var(--white);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .theme-toggle:hover,
+    .theme-toggle:focus-visible {
+      border-color: rgba(10,132,255,0.34);
+      background: rgba(10,132,255,0.12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .page {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 48px 120px;
+    }
+
+    .hero {
+      min-height: 88vh;
+      display: grid;
+      align-items: end;
+      padding-top: 112px;
+      position: relative;
+    }
+
+    .hero-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background:
+        linear-gradient(135deg, rgba(44,7,94,0.95) 0%, rgba(79,22,153,0.96) 52%, rgba(22,184,166,0.92) 100%);
+      min-height: 580px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+
+    body[data-theme="light"] .hero-shell {
+      background:
+        linear-gradient(135deg, rgba(219,234,254,0.98) 0%, rgba(240,247,255,0.98) 52%, rgba(215,245,241,0.94) 100%);
+      box-shadow: 0 24px 90px rgba(10,132,255,0.12);
+    }
+
+    body[data-theme="light"] .project-mark span {
+      color: var(--accent);
+    }
+
+    body[data-theme="light"] .hero-pill {
+      border-color: rgba(21,23,29,0.12);
+      background: rgba(255,255,255,0.58);
+      color: rgba(21,23,29,0.72);
+    }
+
+    .hero-shell::before {
+      content: "";
+      position: absolute;
+      inset: auto auto -120px -80px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-copy {
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 22px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .project-mark {
+      font-size: clamp(42px, 6vw, 76px);
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 0.95;
+    }
+
+    .project-mark span {
+      color: #a68bff;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 980px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 8px 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.78);
+      letter-spacing: 0.4px;
+    }
+
+    .hero-right {
+      position: relative;
+      min-height: 100%;
+      padding: 28px;
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+    }
+
+    .hero-cutout {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(160deg, transparent 0 36%, rgba(255,255,255,0.08) 36% 38%, transparent 38%),
+        linear-gradient(325deg, transparent 0 44%, rgba(0,0,0,0.18) 44% 49%, transparent 49%);
+      pointer-events: none;
+    }
+
+    .hero-image-card {
+      width: min(420px, 100%);
+      height: 100%;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05)),
+        linear-gradient(130deg, rgba(255,255,255,0.1), rgba(0,0,0,0.08));
+      min-height: 420px;
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-image-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    .hero-image-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.24));
+      pointer-events: none;
+    }
+
+    .image-expand {
+      appearance: none;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      background: transparent;
+      color: inherit;
+      cursor: zoom-in;
+      display: block;
+      font: inherit;
+      position: relative;
+    }
+
+    .image-expand::after {
+      content: "Open larger";
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 3;
+      border-radius: 980px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.62);
+      color: rgba(255,255,255,0.82);
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+
+    .image-expand:hover::after,
+    .image-expand:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .image-expand:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: 18px;
+    }
+
+    .content-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 40px;
+      padding: 64px 0 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    .content-head h1 {
+      font-family: var(--serif);
+      font-size: clamp(40px, 5vw, 68px);
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -1.8px;
+      margin-bottom: 18px;
+    }
+
+    .lede {
+      max-width: 720px;
+      font-size: 18px;
+      color: var(--white-70);
+      line-height: 1.72;
+    }
+
+    .meta-card {
+      display: grid;
+      gap: 16px;
+      align-self: start;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 26px;
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 14px;
+      font-size: 14px;
+    }
+
+    .meta-row dt {
+      color: var(--white-30);
+    }
+
+    .meta-row dd {
+      color: var(--white-70);
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 40px;
+      padding-top: 40px;
+    }
+
+    .article {
+      display: grid;
+      gap: 24px;
+    }
+
+    .story-section {
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      padding: 32px;
+    }
+
+    .story-section h2 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 3.6vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin-bottom: 14px;
+    }
+
+    .story-section p {
+      color: var(--white-70);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .story-section + .story-section {
+      margin-top: 0;
+    }
+
+    .bullet-list {
+      list-style: none;
+      display: grid;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: 18px;
+      color: var(--white-70);
+      font-size: 15px;
+      line-height: 1.72;
+    }
+
+    .bullet-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(10,132,255,0.4);
+    }
+
+    .insight-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .insight-card {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card-bg-soft);
+      padding: 20px;
+    }
+
+    .insight-card h3 {
+      font-size: 13px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--white-30);
+      margin-bottom: 10px;
+    }
+
+    .insight-card p {
+      font-size: 14px;
+      color: var(--white-70);
+      line-height: 1.6;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .image-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .figure-card {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+    }
+
+    .figure-media {
+      min-height: 260px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        linear-gradient(135deg, rgba(93,26,163,0.22), rgba(10,132,255,0.08)),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    }
+
+    .figure-media.tall {
+      min-height: 340px;
+    }
+
+    .figure-media img {
+      width: 100%;
+      height: auto;
+      max-height: 720px;
+      object-fit: contain;
+      display: block;
+      border-radius: 14px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.28);
+    }
+
+    .figure-media.tall img {
+      max-height: 620px;
+    }
+
+    .image-grid.single .figure-media img {
+      max-height: 920px;
+    }
+
+    .figure-caption {
+      padding: 18px 20px 20px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .figure-caption strong {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--white);
+    }
+
+    .figure-caption span {
+      font-size: 13px;
+      color: var(--white-60);
+    }
+
+    .image-viewer {
+      --viewer-text: #ffffff;
+      --viewer-text-muted: rgba(255,255,255,0.76);
+      --viewer-text-subtle: rgba(255,255,255,0.52);
+      --viewer-glass: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
+      --viewer-glass-strong: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.12));
+      --viewer-glass-border: rgba(255,255,255,0.32);
+      --viewer-glass-shadow: 0 16px 44px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -1px 0 rgba(255,255,255,0.08);
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(10,132,255,0.18), transparent 34%),
+        rgba(2,3,8,0.82);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      color: var(--viewer-text);
+    }
+
+    .image-viewer.is-open {
+      display: flex;
+    }
+
+    .image-viewer-panel {
+      width: min(1280px, 100%);
+      max-height: calc(100vh - 56px);
+      display: grid;
+      gap: 14px;
+    }
+
+    .image-viewer-stage {
+      align-items: center;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 48px minmax(0, 1fr) 48px;
+    }
+
+    .image-viewer-frame {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.64);
+      max-height: calc(100vh - 150px);
+      overflow: auto;
+      box-shadow: 0 28px 96px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+    }
+
+    .image-viewer img {
+      width: auto;
+      max-width: 100%;
+      max-height: calc(100vh - 150px);
+      margin: 0 auto;
+      cursor: zoom-in;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .image-viewer-frame.is-zoomed img {
+      max-width: none;
+      max-height: none;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .image-viewer-frame.is-zoomed.is-dragging img {
+      cursor: grabbing;
+    }
+
+    .image-viewer-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .image-viewer-caption {
+      color: var(--viewer-text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .image-viewer-count {
+      display: block;
+      color: var(--viewer-text-subtle);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .image-viewer-actions {
+      align-items: center;
+      display: flex;
+      flex: 0 0 auto;
+      gap: 12px;
+    }
+
+    .image-viewer-zoom {
+      align-items: center;
+      border: 1px solid var(--viewer-glass-border);
+      border-radius: 980px;
+      background: var(--viewer-glass);
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      box-shadow: var(--viewer-glass-shadow);
+      color: var(--viewer-text);
+      display: flex;
+      gap: 10px;
+      padding: 8px 12px;
+    }
+
+    .image-viewer-zoom-label {
+      color: var(--viewer-text);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .image-viewer-zoom-button {
+      appearance: none;
+      align-items: center;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.34);
+      border-radius: 50%;
+      color: var(--viewer-text);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 16px;
+      height: 28px;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.32);
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      width: 28px;
+    }
+
+    .image-viewer-zoom-button:hover,
+    .image-viewer-zoom-button:focus-visible {
+      background: linear-gradient(135deg, rgba(10,132,255,0.96), rgba(90,170,255,0.78));
+      border-color: rgba(255,255,255,0.62);
+      box-shadow: 0 8px 24px rgba(10,132,255,0.32), inset 0 1px 0 rgba(255,255,255,0.36);
+      outline: none;
+    }
+
+    .image-viewer-zoom-button:active {
+      transform: scale(0.95);
+    }
+
+    .image-viewer-zoom input {
+      appearance: none;
+      background: transparent;
+      accent-color: var(--accent);
+      cursor: pointer;
+      width: 132px;
+    }
+
+    .image-viewer-zoom input:focus-visible {
+      outline: 2px solid rgba(132,197,255,0.9);
+      outline-offset: 4px;
+      border-radius: 999px;
+    }
+
+    .image-viewer-zoom input::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.36);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.26);
+    }
+
+    .image-viewer-zoom input::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      margin-top: -6px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.72);
+      background: linear-gradient(135deg, #ffffff, rgba(210,232,255,0.92));
+      box-shadow: 0 6px 18px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+
+    .image-viewer-zoom input::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.36);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.26);
+    }
+
+    .image-viewer-zoom input::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.72);
+      background: linear-gradient(135deg, #ffffff, rgba(210,232,255,0.92));
+      box-shadow: 0 6px 18px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+
+    .image-viewer-nav {
+      appearance: none;
+      border: 1px solid var(--viewer-glass-border);
+      border-radius: 50%;
+      background: var(--viewer-glass);
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      box-shadow: var(--viewer-glass-shadow);
+      color: var(--viewer-text);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font: inherit;
+      font-size: 24px;
+      height: 48px;
+      line-height: 1;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.34);
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      width: 48px;
+      z-index: 2;
+    }
+
+    .image-viewer-nav:hover,
+    .image-viewer-nav:focus-visible {
+      background: linear-gradient(135deg, rgba(10,132,255,0.96), rgba(90,170,255,0.76));
+      border-color: rgba(255,255,255,0.62);
+      box-shadow: 0 14px 34px rgba(10,132,255,0.34), inset 0 1px 0 rgba(255,255,255,0.4);
+      outline: none;
+    }
+
+    .image-viewer-nav:active {
+      transform: scale(0.96);
+    }
+
+    .image-viewer-close {
+      appearance: none;
+      border: 1px solid var(--viewer-glass-border);
+      border-radius: 980px;
+      background: var(--viewer-glass);
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      box-shadow: var(--viewer-glass-shadow);
+      color: var(--viewer-text);
+      cursor: pointer;
+      flex: 0 0 auto;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 16px;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .image-viewer-close:hover,
+    .image-viewer-close:focus-visible {
+      background: var(--viewer-glass-strong);
+      border-color: rgba(255,255,255,0.58);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.42);
+      outline: none;
+    }
+
+    @media (max-width: 720px) {
+      .image-viewer {
+        padding: 16px;
+      }
+
+      .image-viewer-panel {
+        max-height: calc(100vh - 32px);
+      }
+
+      .image-viewer-stage {
+        gap: 10px;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+      }
+
+      .image-viewer img {
+        max-height: calc(100vh - 170px);
+      }
+
+      .image-viewer-frame {
+        max-height: calc(100vh - 170px);
+      }
+
+      .image-viewer-frame.is-zoomed img {
+        max-height: none;
+      }
+
+      .image-viewer-meta {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .image-viewer-actions,
+      .image-viewer-zoom {
+        width: 100%;
+      }
+
+      .image-viewer-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .image-viewer-zoom {
+        justify-content: space-between;
+      }
+
+      .image-viewer-close {
+        width: 100%;
+      }
+
+      .image-viewer-zoom input {
+        flex: 1;
+        width: auto;
+      }
+
+      .image-viewer-nav {
+        width: 42px;
+        height: 42px;
+        font-size: 22px;
+      }
+    }
+
+    .solution-card {
+      margin-top: 24px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--card-bg-soft);
+      padding: 24px;
+    }
+
+    .solution-card h3 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      margin-bottom: 10px;
+    }
+
+    .solution-card p {
+      font-size: 15px;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 26px;
+    }
+
+    .result-stat {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card-bg-soft);
+      padding: 22px;
+    }
+
+    .result-stat strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 34px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .result-stat span {
+      color: var(--white-60);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .aside {
+      position: sticky;
+      top: 104px;
+      align-self: start;
+      display: grid;
+      gap: 16px;
+    }
+
+    .aside-card {
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 24px;
+    }
+
+    .aside-card h3 {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white-30);
+      margin-bottom: 16px;
+    }
+
+    .toc {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .toc a {
+      text-decoration: none;
+      color: var(--white-60);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover {
+      color: var(--white);
+    }
+
+    .footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 48px 40px;
+    }
+
+    .footer-shell {
+      border-top: 1px solid var(--border);
+      padding-top: 28px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--white-30);
+      font-size: 13px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+        transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+
+    @media (max-width: 980px) {
+      nav {
+        padding: 16px 24px;
+      }
+
+      .page,
+      .footer {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 96px;
+      }
+
+      .hero-shell,
+      .content-head,
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .aside {
+        position: static;
+      }
+
+      .hero-right {
+        min-height: 360px;
+      }
+
+      .insight-strip,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero-copy,
+      .story-section {
+        padding: 24px;
+      }
+
+      .image-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .meta-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .footer-shell {
+        flex-direction: column;
+      }
+    }
+
+    .lang-selector {
+      position: relative;
+      display: inline-block;
+    }
+
+    .lang-toggle-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 980px;
+      background: var(--white-10);
+      color: var(--white);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .lang-toggle-btn:hover,
+    .lang-toggle-btn:focus-visible {
+      border-color: rgba(10,132,255,0.34);
+      background: rgba(10,132,255,0.12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .lang-toggle-btn .globe-icon {
+      opacity: 0.8;
+    }
+
+    .lang-toggle-btn .chevron {
+      font-size: 8px;
+      opacity: 0.5;
+      transition: transform 0.2s ease;
+      margin-left: 2px;
+    }
+
+    .lang-selector.active .lang-toggle-btn .chevron {
+      transform: rotate(180deg);
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 6px;
+      list-style: none;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 140px;
+      box-shadow: 0 12px 36px var(--surface-shadow);
+      z-index: 1000;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+    }
+
+    body:not([data-theme="light"]) .lang-dropdown {
+      background: rgba(17, 17, 17, 0.82);
+    }
+
+    body[data-theme="light"] .lang-dropdown {
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .lang-selector.active .lang-dropdown {
+      display: flex;
+    }
+
+    .lang-dropdown li {
+      width: 100%;
+    }
+
+    .lang-dropdown button {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-radius: 10px;
+      color: var(--white-60);
+      cursor: pointer;
+      display: block;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      padding: 8px 12px;
+      text-align: left;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .lang-dropdown button:hover,
+    .lang-dropdown button:focus-visible {
+      background: var(--white-10);
+      color: var(--white);
+      outline: none;
+    }
+
+    .lang-dropdown li[aria-selected="true"] button {
+      color: var(--accent);
+      font-weight: 500;
+      background: var(--accent-glow);
+    }
+  </style>
+  <script src="translations.js"></script>
+  <script>
+    document.documentElement.style.visibility = 'hidden';
+    (function() {
+      const savedLang = localStorage.getItem("portfolio-lang");
+      let lang = "en";
+      if (savedLang) {
+        lang = savedLang;
+      } else {
+        const browserLang = navigator.language || navigator.userLanguage || "en";
+        const normalized = browserLang.toLowerCase();
+        if (normalized.startsWith("pt")) lang = "pt-br";
+        else if (normalized.startsWith("es")) lang = "es";
+      }
+      document.documentElement.lang = lang === "pt-br" ? "pt-BR" : lang;
+    })();
+  </script>
+</head>
+<body data-theme="light">
+  <nav>
+    <a href="index.html" class="nav-logo" aria-label="Back to portfolio home" data-i18n="nav_logo">ML.</a>
+    <div class="nav-actions">
+      <ul class="nav-links">
+        <li><a href="index.html#work" class="nav-back" data-i18n="cs_back_to_work">Back to work</a></li>
+        <li><a href="#results" data-i18n="cs_results">Results</a></li>
+        <li><a href="#contact" class="nav-cta" data-i18n="nav_contact">Get in touch</a></li>
+      </ul>
+      <div class="lang-selector">
+        <button class="lang-toggle-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <svg class="globe-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          <span class="current-lang">EN</span>
+          <span class="chevron" aria-hidden="true">▼</span>
+        </button>
+        <ul class="lang-dropdown" role="listbox" aria-label="Languages">
+          <li role="option" data-value="en" aria-selected="true"><button type="button" data-lang="en">English</button></li>
+          <li role="option" data-value="pt-br" aria-selected="false"><button type="button" data-lang="pt-br">Português</button></li>
+          <li role="option" data-value="es" aria-selected="false"><button type="button" data-lang="es">Español</button></li>
+        </ul>
+      </div>
+      <button class="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="true">
+        <span class="theme-toggle-icon" aria-hidden="true"></span>
+        <span class="theme-toggle-text" data-i18n="theme_dark">Dark</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-shell reveal">
+        <div class="hero-copy">
+          <div class="project-mark">fluency<span>talks</span></div>
+          <div class="hero-meta">
+            <span class="hero-pill" data-i18n="cs_case_study">Case Study</span>
+            <span class="hero-pill" data-i18n="cs_product_design">Product Design</span>
+            <span class="hero-pill" data-i18n="cs_flow_redesign">Flow Redesign</span>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="hero-cutout" aria-hidden="true"></div>
+          <div class="hero-image-card">
+            <img src="assets/hero-image.png" alt="Class scheduling flow interface preview" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-head">
+      <div class="reveal reveal-delay-1">
+        <p class="eyebrow" data-i18n="cs_eyebrow">Fluency Academy</p>
+        <h1 data-i18n="cs_title">Class Scheduling Flow</h1>
+        <p class="lede" data-i18n="cs_lede">
+          Many students struggled to find relevant classes and schedule them efficiently. Through qualitative and quantitative research, we redesigned critical parts of the booking experience to make class discovery faster, clearer, and more intuitive.
+        </p>
+      </div>
+
+      <dl class="meta-card reveal reveal-delay-2">
+        <div class="meta-row">
+          <dt data-i18n="cs_meta_company">Company</dt>
+          <dd data-i18n="cs_eyebrow">Fluency Academy</dd>
+        </div>
+        <div class="meta-row">
+          <dt data-i18n="cs_meta_role">Role</dt>
+          <dd data-i18n="cs_meta_role_val">Product Designer</dd>
+        </div>
+        <div class="meta-row">
+          <dt data-i18n="cs_meta_team">Team</dt>
+          <dd data-i18n="cs_meta_team_val">2 Product Designers + Engineering Team</dd>
+        </div>
+        <div class="meta-row">
+          <dt data-i18n="cs_meta_focus">Focus</dt>
+          <dd data-i18n="cs_meta_focus_val">Research, journey mapping, filtering interactions, prototyping, handoff</dd>
+        </div>
+        <div class="meta-row">
+          <dt data-i18n="cs_meta_timeline">Timeline</dt>
+          <dd data-i18n="cs_meta_timeline_val">September 2024 — October 2024</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="content-grid">
+      <article class="article">
+        <section class="story-section reveal" id="overview">
+          <h2 data-i18n="cs_overview_title">Project Overview</h2>
+          <p data-i18n="cs_overview_p1">
+            While using the learning platform, many students struggled to find relevant classes and schedule them efficiently. The booking experience created friction during navigation, filtering, and class selection, often leading to frustration and abandoned scheduling attempts.
+          </p>
+          <p style="margin-top: 14px;" data-i18n="cs_overview_p2">
+            To better understand these issues, we conducted qualitative and quantitative research focused on the scheduling journey. Based on the insights collected, we redesigned critical parts of the experience to make class discovery faster, clearer, and more intuitive.
+          </p>
+        </section>
+
+        <section class="story-section reveal" id="responsibilities">
+          <h2 data-i18n="cs_responsibilities_title">Responsibilities</h2>
+          <p data-i18n="cs_responsibilities_p1">
+            Together with another Product Designer, I was responsible for the full research and design process, from understanding the scheduling journey to supporting implementation with the engineering team.
+          </p>
+          <ul class="bullet-list">
+            <li data-i18n="cs_resp_bullet1">Planned and conducted user research with students.</li>
+            <li data-i18n="cs_resp_bullet2">Analyzed qualitative feedback and quantitative behavioral data.</li>
+            <li data-i18n="cs_resp_bullet3">Mapped the scheduling journey and identified usability bottlenecks.</li>
+            <li data-i18n="cs_resp_bullet4">Created wireframes and high-fidelity prototypes for navigation flows and filtering interactions.</li>
+            <li data-i18n="cs_resp_bullet5">Ran usability tests and collaborated directly with developers during implementation.</li>
+          </ul>
+        </section>
+
+        <section class="story-section reveal" id="challenge">
+          <h2 data-i18n="cs_problem_title">The Problem</h2>
+          <p data-i18n="cs_problem_p1">
+            Students frequently reported difficulty completing what should have been a simple task: finding the right class and scheduling it with confidence. The experience required excessive effort and created unnecessary cognitive load.
+          </p>
+          <ul class="bullet-list">
+            <li data-i18n="cs_prob_bullet1">Finding classes aligned with their interests was not direct enough.</li>
+            <li data-i18n="cs_prob_bullet2">Available schedules were difficult to understand quickly.</li>
+            <li data-i18n="cs_prob_bullet3">Filtering relevant content required too much effort.</li>
+            <li data-i18n="cs_prob_bullet4">Users had to navigate through multiple scheduling options before making a decision.</li>
+            <li data-i18n="cs_prob_bullet5">Students lacked clarity about class progression and structured learning paths.</li>
+          </ul>
+        </section>
+
+        <section class="story-section reveal" id="decisions">
+          <h2 data-i18n="cs_decisions_title">Key Decisions</h2>
+          <p data-i18n="cs_decisions_p1">
+            One of the most important decisions was reducing dependency on complex filtering interactions. Instead of forcing users to configure multiple filters before seeing relevant content, we shifted the experience toward immediate visibility and progressive refinement.
+          </p>
+          <div class="insight-strip">
+            <div class="insight-card">
+              <h3 data-i18n="cs_dec_card1_title">Decision 01</h3>
+              <p data-i18n="cs_dec_card1_p">Surface class availability earlier so students could scan open classes before configuring detailed filters.</p>
+            </div>
+            <div class="insight-card">
+              <h3 data-i18n="cs_dec_card2_title">Decision 02</h3>
+              <p data-i18n="cs_dec_card2_p">Make active filters persistent and visible at the top of the page to improve orientation.</p>
+            </div>
+            <div class="insight-card">
+              <h3 data-i18n="cs_dec_card3_title">Decision 03</h3>
+              <p data-i18n="cs_dec_card3_p">Add clearer time-range information and specific time filtering to support faster schedule scanning.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="story-section reveal" id="research">
+          <h2 data-i18n="cs_research_title">Research &amp; Insights</h2>
+          <p data-i18n="cs_research_p1">
+            We started by investigating the main friction points within the scheduling flow. Student interviews helped us understand expectations, frustrations, and behavior during scheduling, while behavioral data helped us identify where the flow was breaking down.
+          </p>
+          <ul class="bullet-list">
+            <li data-i18n="cs_research_bullet1">Qualitative interviews with students to understand scheduling expectations, frustrations, and recurring behavior.</li>
+            <li data-i18n="cs_research_bullet2">Quantitative analysis using Hotjar and Google Analytics to review drop-off points, abandonment patterns, navigation friction, and filter usage behavior.</li>
+            <li data-i18n="cs_research_bullet3">Journey mapping to understand where users hesitated, lost orientation, or needed more context before booking.</li>
+          </ul>
+
+          <div class="insight-strip">
+            <div class="insight-card">
+              <h3 data-i18n="cs_insight_card1_title">Insight 01</h3>
+              <p data-i18n="cs_insight_card1_p">Users struggled to quickly understand which classes were available on specific days and times.</p>
+            </div>
+            <div class="insight-card">
+              <h3 data-i18n="cs_insight_card2_title">Insight 02</h3>
+              <p data-i18n="cs_insight_card2_p">The filtering system made it difficult to narrow results by topic, teacher, time slot, and specific schedules.</p>
+            </div>
+            <div class="insight-card">
+              <h3 data-i18n="cs_insight_card3_title">Insight 03</h3>
+              <p data-i18n="cs_insight_card3_p">Students needed a clearer understanding of lesson progression and content organization.</p>
+            </div>
+          </div>
+
+          <div class="image-grid">
+            <figure class="figure-card">
+              <div class="figure-media">
+                <button class="image-expand" type="button" data-full="assets/research-artifact-1.png" data-caption="Evidence from the discovery work used to identify friction in the scheduling journey." data-i18n-caption="cs_artifact_caption1" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open research artifact larger">
+                  <img src="assets/research-artifact-1.png" alt="Research artifact showing class scheduling findings" loading="lazy" />
+                </button>
+              </div>
+              <figcaption class="figure-caption">
+                <strong data-i18n="cs_artifact_label">Research artifact</strong>
+                <span data-i18n="cs_artifact_caption1">Evidence from the discovery work used to identify friction in the scheduling journey.</span>
+              </figcaption>
+            </figure>
+
+            <figure class="figure-card">
+              <div class="figure-media">
+                <button class="image-expand" type="button" data-full="assets/research-artifact-2.png" data-caption="Supporting research material connecting user feedback with scheduling pain points." data-i18n-caption="cs_artifact_caption2" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open supporting research artifact larger">
+                  <img src="assets/research-artifact-2.png" alt="Research artifact with student feedback and scheduling insights" loading="lazy" />
+                </button>
+              </div>
+              <figcaption class="figure-caption">
+                <strong data-i18n="cs_artifact_label">Research artifact</strong>
+                <span data-i18n="cs_artifact_caption2">Supporting research material connecting user feedback with scheduling pain points.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="story-section reveal" id="solutions">
+          <h2 data-i18n="cs_solutions_title">Solutions &amp; Implementation</h2>
+          <p data-i18n="cs_solutions_p1">
+            Based on the research findings, we defined three goals: reduce the effort required to schedule a class, improve discoverability of available lessons, and make filtering faster and more intuitive.
+          </p>
+
+          <div class="solution-card">
+            <h3 data-i18n="cs_sol_card1_title">1. Interactive calendar on the scheduling page</h3>
+            <p data-i18n="cs_sol_card1_p">
+              We introduced an interactive calendar directly on the scheduling page. Students could visualize class availability instantly, select a specific day quickly, and access relevant classes without relying heavily on filters. This reduced friction around one of the most frequent user actions: checking availability.
+            </p>
+
+            <div class="image-grid">
+              <figure class="figure-card">
+                <div class="figure-media tall">
+                  <button class="image-expand" type="button" data-full="assets/entry-point-before.png" data-caption="Original scheduling entry point with limited availability visibility." data-i18n-caption="cs_before_caption1" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open original scheduling entry point larger">
+                    <img src="assets/entry-point-before.png" alt="Original class scheduling entry point before redesign" loading="lazy" />
+                  </button>
+                </div>
+                <figcaption class="figure-caption">
+                  <strong data-i18n="cs_before">Before</strong>
+                  <span data-i18n="cs_before_caption1">Original scheduling entry point with limited availability visibility.</span>
+                </figcaption>
+              </figure>
+
+              <figure class="figure-card">
+                <div class="figure-media tall">
+                  <button class="image-expand" type="button" data-full="assets/entry-point-after.png" data-caption="Calendar-driven browsing with faster access to available classes." data-i18n-caption="cs_after_caption1" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open redesigned scheduling entry point larger">
+                    <img src="assets/entry-point-after.png" alt="Redesigned scheduling entry point with calendar availability" loading="lazy" />
+                  </button>
+                </div>
+                <figcaption class="figure-caption">
+                  <strong data-i18n="cs_after">After</strong>
+                  <span data-i18n="cs_after_caption1">Calendar-driven browsing with faster access to available classes.</span>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="solution-card">
+            <h3 data-i18n="cs_sol_card2_title">2. Redesigned filtering system</h3>
+            <p data-i18n="cs_sol_card2_p">
+              We restructured the filtering experience to improve speed and clarity. Date-related filters were moved higher in the hierarchy, active filters stayed visible at the top of the page, time-range indicators became clearer, and a new scheduling field allowed users to search for precise time slots more effectively.
+            </p>
+
+            <div class="image-grid">
+              <figure class="figure-card">
+                <div class="figure-media tall">
+                  <button class="image-expand" type="button" data-full="assets/search-before.png" data-caption="Legacy filtering flow with unclear hierarchy and higher decision friction." data-i18n-caption="cs_before_caption2" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open original filtering experience larger">
+                    <img src="assets/search-before.png" alt="Original filtering experience before redesign" loading="lazy" />
+                  </button>
+                </div>
+                <figcaption class="figure-caption">
+                  <strong data-i18n="cs_before">Before</strong>
+                  <span data-i18n="cs_before_caption2">Legacy filtering flow with unclear hierarchy and higher decision friction.</span>
+                </figcaption>
+              </figure>
+
+              <figure class="figure-card">
+                <div class="figure-media tall">
+                  <button class="image-expand" type="button" data-full="assets/search-after.png" data-caption="Refined filters with persistent selections, clearer time ranges, and more precise scheduling control." data-i18n-caption="cs_after_caption2" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open redesigned filtering experience larger">
+                    <img src="assets/search-after.png" alt="Redesigned filtering experience with clearer scheduling controls" loading="lazy" />
+                  </button>
+                </div>
+                <figcaption class="figure-caption">
+                  <strong data-i18n="cs_after">After</strong>
+                  <span data-i18n="cs_after_caption2">Refined filters with persistent selections, clearer time ranges, and more precise scheduling control.</span>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="story-section reveal" id="constraints">
+          <h2 data-i18n="cs_constraints_title">Working With Constraints</h2>
+          <p data-i18n="cs_constraints_p1">
+            The redesign had to improve a critical product journey while fitting the existing platform structure and scheduling logic. We kept the scope focused on changes that could meaningfully reduce friction without creating unnecessary implementation risk.
+          </p>
+          <ul class="bullet-list">
+            <li data-i18n="cs_constraints_bullet1">Balanced user needs with business priorities around engagement and lesson completion.</li>
+            <li data-i18n="cs_constraints_bullet2">Worked within the existing product structure and design system.</li>
+            <li data-i18n="cs_constraints_bullet3">Clarified new filtering behaviors and scheduling edge cases with engineering.</li>
+            <li data-i18n="cs_constraints_bullet4">Used research and platform data to keep the team aligned on the highest-impact improvements.</li>
+          </ul>
+        </section>
+
+        <section class="story-section reveal" id="results">
+          <h2 data-i18n="cs_results_title">Outcome &amp; Impact</h2>
+          <p data-i18n="cs_results_p1">
+            The redesign improved usability and engagement across the scheduling experience. Students were able to find classes more efficiently, navigate with less friction, and better understand available schedules and content organization.
+          </p>
+
+          <div class="results-grid">
+            <div class="result-stat">
+              <strong data-i18n="cs_res_stat1_title">Faster</strong>
+              <span data-i18n="cs_res_stat1_p">Users were able to find and schedule classes more efficiently.</span>
+            </div>
+            <div class="result-stat">
+              <strong data-i18n="cs_res_stat2_title">Clearer</strong>
+              <span data-i18n="cs_res_stat2_p">Students reported easier navigation, better schedule visibility, and clearer content organization.</span>
+            </div>
+            <div class="result-stat">
+              <strong data-i18n="cs_res_stat3_title">Engaged</strong>
+              <span data-i18n="cs_res_stat3_p">The platform experienced higher scheduling rates and increased usage of available class resources.</span>
+            </div>
+          </div>
+
+          <div class="image-grid single">
+            <figure class="figure-card">
+              <div class="figure-media tall">
+                <button class="image-expand" type="button" data-full="assets/survey.png" data-caption="Survey evidence showing how students evaluated the scheduling experience after the improvements." data-i18n-caption="cs_snapshot_caption" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Open student feedback survey larger">
+                  <img src="assets/survey.png" alt="Survey results showing student feedback after scheduling improvements" loading="lazy" />
+                </button>
+              </div>
+              <figcaption class="figure-caption">
+                <strong data-i18n="cs_snapshot_label">Student feedback snapshot</strong>
+                <span data-i18n="cs_snapshot_caption">Survey evidence showing how students evaluated the scheduling experience after the improvements.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="story-section reveal" id="conclusion">
+          <h2 data-i18n="cs_reflection_title">Reflection</h2>
+          <p data-i18n="cs_reflection_p1">
+            This project reinforced the importance of combining behavioral data with direct user feedback when redesigning complex flows. Rather than focusing only on visual improvements, the solution centered on reducing cognitive effort and improving information clarity during decision-making.
+          </p>
+          <p style="margin-top: 14px;" data-i18n="cs_reflection_p2">
+            The outcome was a scheduling experience that better aligned with user expectations while also supporting business engagement goals.
+          </p>
+        </section>
+
+        <section class="story-section reveal" id="contact">
+          <h2 data-i18n="cs_handoff_title">Collaboration &amp; Handoff</h2>
+          <p data-i18n="cs_handoff_p1">
+            The project required close collaboration with engineering to ensure the new scheduling behaviors and filtering logic were implemented correctly. My handoff process included organized Figma documentation, interaction specifications, edge-case explanations, flow documentation, and direct communication with developers during implementation.
+          </p>
+        </section>
+      </article>
+
+      <aside class="aside reveal reveal-delay-1">
+        <div class="aside-card">
+          <h3 data-i18n="cs_toc_on_this_page">On this page</h3>
+          <ul class="toc">
+            <li><a href="#overview" data-i18n="cs_toc_overview">Overview</a></li>
+            <li><a href="#responsibilities" data-i18n="cs_toc_responsibilities">Responsibilities</a></li>
+            <li><a href="#challenge" data-i18n="cs_toc_problem">Problem</a></li>
+            <li><a href="#decisions" data-i18n="cs_toc_decisions">Key Decisions</a></li>
+            <li><a href="#research" data-i18n="cs_toc_research">Research</a></li>
+            <li><a href="#solutions" data-i18n="cs_toc_solutions">Solutions</a></li>
+            <li><a href="#constraints" data-i18n="cs_toc_constraints">Constraints</a></li>
+            <li><a href="#results" data-i18n="cs_toc_results">Results</a></li>
+            <li><a href="#conclusion" data-i18n="cs_toc_reflection">Reflection</a></li>
+          </ul>
+        </div>
+
+        <div class="aside-card">
+          <h3 data-i18n="cs_goals_title">Design goals</h3>
+          <ul class="toc">
+            <li data-i18n="cs_goal_1">Reduce scheduling effort</li>
+            <li data-i18n="cs_goal_2">Improve class discovery</li>
+            <li data-i18n="cs_goal_3">Make filtering faster</li>
+            <li data-i18n="cs_goal_4">Clarify engineering handoff</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-shell">
+      <span data-i18n="footer_copyright">© 2025 Marcelo Lionço Mendes</span>
+      <span data-i18n="footer_built">Designed &amp; built with care · Curitiba, Brazil</span>
+    </div>
+  </footer>
+
+  <div class="image-viewer" id="imageViewer" role="dialog" aria-modal="true" aria-hidden="true" data-i18n-aria-label="cs_viewer_open_larger" aria-label="Expanded image viewer">
+    <div class="image-viewer-panel">
+      <div class="image-viewer-stage">
+        <button class="image-viewer-nav image-viewer-prev" type="button" data-i18n-aria-label="cs_prev_image" aria-label="Previous image">‹</button>
+        <div class="image-viewer-frame">
+          <img id="imageViewerImg" src="" alt="" />
+        </div>
+        <button class="image-viewer-nav image-viewer-next" type="button" data-i18n-aria-label="cs_next_image" aria-label="Next image">›</button>
+      </div>
+      <div class="image-viewer-meta">
+        <p class="image-viewer-caption" id="imageViewerCaption">
+          <span id="imageViewerCaptionText"></span>
+          <span class="image-viewer-count" id="imageViewerCount"></span>
+        </p>
+        <div class="image-viewer-actions">
+          <div class="image-viewer-zoom" data-i18n-aria-label="cs_viewer_zoom" aria-label="Zoom controls">
+            <button class="image-viewer-zoom-button" type="button" data-zoom-step="-25" data-i18n-aria-label="cs_prev_image" aria-label="Zoom out">-</button>
+            <label class="image-viewer-zoom-label" for="imageViewerZoom">
+              <span data-i18n="cs_viewer_zoom">Zoom</span> <span id="imageViewerZoomValue">Fit</span>
+            </label>
+            <input id="imageViewerZoom" type="range" min="100" max="300" step="25" value="100" data-i18n-aria-label="cs_viewer_zoom" aria-label="Zoom level" />
+            <button class="image-viewer-zoom-button" type="button" data-zoom-step="25" data-i18n-aria-label="cs_next_image" aria-label="Zoom in">+</button>
+          </div>
+          <button class="image-viewer-close" type="button" data-i18n="cs_viewer_close">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Lightbox / Image Viewer logic variables
+    const imageViewer = document.querySelector("#imageViewer");
+    const imageViewerFrame = imageViewer.querySelector(".image-viewer-frame");
+    const imageViewerImg = document.querySelector("#imageViewerImg");
+    const imageViewerCaptionText = document.querySelector("#imageViewerCaptionText");
+    const imageViewerCount = document.querySelector("#imageViewerCount");
+    const imageViewerClose = imageViewer.querySelector(".image-viewer-close");
+    const imageViewerPrev = imageViewer.querySelector(".image-viewer-prev");
+    const imageViewerNext = imageViewer.querySelector(".image-viewer-next");
+    const imageViewerZoomInput = document.querySelector("#imageViewerZoom");
+    const imageViewerZoomValue = document.querySelector("#imageViewerZoomValue");
+    const imageViewerZoomButtons = Array.from(imageViewer.querySelectorAll(".image-viewer-zoom-button"));
+    const imageTriggers = Array.from(document.querySelectorAll(".image-expand"));
+    const defaultZoomLevel = 1.75;
+    const minZoomLevel = Number(imageViewerZoomInput.min) / 100;
+    const maxZoomLevel = Number(imageViewerZoomInput.max) / 100;
+    let lastFocusedImageTrigger = null;
+    let currentImageIndex = 0;
+    let selectedZoomLevel = defaultZoomLevel;
+    let currentZoomLevel = minZoomLevel;
+    let fitImageWidth = 0;
+    let isDraggingZoomedImage = false;
+    let hasDraggedZoomedImage = false;
+    let suppressNextImageClick = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartScrollLeft = 0;
+    let dragStartScrollTop = 0;
+
+    // Theme logic
+    const themeToggle = document.querySelector(".theme-toggle");
+    const themeToggleText = document.querySelector(".theme-toggle-text");
+    const savedTheme = localStorage.getItem("portfolio-theme");
+    const initialTheme = savedTheme || "light";
+
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme;
+      themeToggle.setAttribute("aria-pressed", theme === "light");
+      themeToggle.setAttribute("aria-label", `Switch to ${theme === "light" ? "dark" : "light"} theme`);
+      
+      const currentLang = getActiveLanguage();
+      const themeKey = theme === "light" ? "theme_dark" : "theme_light";
+      const dict = translations[currentLang] || translations.en;
+      themeToggleText.textContent = dict[themeKey] || (theme === "light" ? "Dark" : "Light");
+      
+      localStorage.setItem("portfolio-theme", theme);
+    }
+
+    applyTheme(initialTheme);
+
+    themeToggle.addEventListener("click", () => {
+      applyTheme(document.body.dataset.theme === "light" ? "dark" : "light");
+    });
+
+    // Translation logic
+    function getActiveLanguage() {
+      const savedLang = localStorage.getItem("portfolio-lang");
+      if (savedLang) return savedLang;
+      
+      const browserLang = navigator.language || navigator.userLanguage || "en";
+      const normalized = browserLang.toLowerCase();
+      
+      if (normalized.startsWith("pt")) {
+        return "pt-br";
+      } else if (normalized.startsWith("es")) {
+        return "es";
+      }
+      return "en";
+    }
+
+    function translatePage(lang) {
+      const dictionary = translations[lang] || translations.en;
+      
+      // Update document language attribute
+      document.documentElement.lang = lang === "pt-br" ? "pt-BR" : lang;
+      
+      // Find all elements with data-i18n
+      const translatableElements = document.querySelectorAll("[data-i18n]");
+      translatableElements.forEach(element => {
+        const key = element.getAttribute("data-i18n");
+        if (dictionary[key]) {
+          element.innerHTML = dictionary[key];
+        }
+      });
+
+      // Update accessibility labels
+      const ariaElements = document.querySelectorAll("[data-i18n-aria-label]");
+      ariaElements.forEach(element => {
+        const key = element.getAttribute("data-i18n-aria-label");
+        if (dictionary[key]) {
+          element.setAttribute("aria-label", dictionary[key]);
+        }
+      });
+
+      // Update current language indicator in UI
+      const currentLangUI = document.querySelector(".lang-toggle-btn .current-lang");
+      if (currentLangUI) {
+        currentLangUI.textContent = lang === "pt-br" ? "PT" : lang.toUpperCase().substring(0, 2);
+      }
+
+      // Update selected option in dropdown
+      const options = document.querySelectorAll(".lang-dropdown li");
+      options.forEach(opt => {
+        const isSelected = opt.getAttribute("data-value") === lang;
+        opt.setAttribute("aria-selected", isSelected);
+      });
+
+      // Refresh the theme toggle text with the correct translation
+      const theme = document.body.dataset.theme || "light";
+      const themeKey = theme === "light" ? "theme_dark" : "theme_light";
+      themeToggleText.textContent = dictionary[themeKey] || (theme === "light" ? "Dark" : "Light");
+
+      // Update image viewer button values
+      const zoomValueElement = document.querySelector("#imageViewerZoomValue");
+      if (zoomValueElement && !imageViewerFrame.classList.contains("is-zoomed")) {
+        zoomValueElement.textContent = "Fit";
+      }
+
+      // If lightbox is open, re-render to update the caption text translation
+      if (imageViewer && imageViewer.classList.contains("is-open")) {
+        renderImageViewerImage(currentImageIndex);
+      }
+    }
+
+    // Dropdown toggle logic
+    const langSelector = document.querySelector(".lang-selector");
+    const langToggleBtn = document.querySelector(".lang-toggle-btn");
+    const langDropdown = document.querySelector(".lang-dropdown");
+
+    function toggleLangDropdown() {
+      const isExpanded = langToggleBtn.getAttribute("aria-expanded") === "true";
+      langToggleBtn.setAttribute("aria-expanded", !isExpanded);
+      langSelector.classList.toggle("active");
+    }
+
+    function closeLangDropdown() {
+      langToggleBtn.setAttribute("aria-expanded", "false");
+      langSelector.classList.remove("active");
+    }
+
+    langToggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleLangDropdown();
+    });
+
+    // Option selection
+    const langOptions = document.querySelectorAll(".lang-dropdown li button");
+    langOptions.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const selectedLang = btn.getAttribute("data-lang");
+        localStorage.setItem("portfolio-lang", selectedLang);
+        translatePage(selectedLang);
+        closeLangDropdown();
+      });
+    });
+
+    // Close when clicking outside
+    document.addEventListener("click", (e) => {
+      if (langSelector && !langSelector.contains(e.target)) {
+        closeLangDropdown();
+      }
+    });
+
+    // Keyboard accessibility
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeLangDropdown();
+      }
+    });
+
+    // Initialize translations and display page
+    const activeLang = getActiveLanguage();
+    translatePage(activeLang);
+    document.documentElement.style.visibility = 'visible';
+
+    // Reveals observer
+    const reveals = document.querySelectorAll(".reveal");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+
+    reveals.forEach((el) => observer.observe(el));
+
+    const nav = document.querySelector("nav");
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 60) {
+        nav.style.borderBottomColor = "var(--nav-border-active)";
+      } else {
+        nav.style.borderBottomColor = "var(--border)";
+      }
+    });
+
+    // Lightbox / Image Viewer logic functions and handlers
+
+    function clampZoomLevel(level) {
+      return Math.min(maxZoomLevel, Math.max(minZoomLevel, level));
+    }
+
+    function updateZoomControlDisplay(isZoomed) {
+      const displayLevel = isZoomed ? Math.round(currentZoomLevel * 100) : 100;
+      imageViewerZoomInput.value = String(displayLevel);
+      imageViewerZoomValue.textContent = isZoomed ? `${displayLevel}%` : "Fit";
+    }
+
+    function applyImageZoomLevel(level, centerRatioX = 0.5, centerRatioY = 0.5) {
+      const nextZoomLevel = clampZoomLevel(level);
+
+      if (!imageViewerFrame.classList.contains("is-zoomed")) {
+        fitImageWidth = imageViewerImg.getBoundingClientRect().width || imageViewerImg.naturalWidth;
+      }
+
+      currentZoomLevel = nextZoomLevel;
+      selectedZoomLevel = nextZoomLevel;
+      imageViewerFrame.classList.add("is-zoomed");
+      imageViewerImg.style.width = `${fitImageWidth * currentZoomLevel}px`;
+      imageViewerImg.title = "Click to zoom out";
+      updateZoomControlDisplay(true);
+
+      requestAnimationFrame(() => {
+        imageViewerFrame.scrollLeft = (imageViewerFrame.scrollWidth * centerRatioX) - (imageViewerFrame.clientWidth / 2);
+        imageViewerFrame.scrollTop = (imageViewerFrame.scrollHeight * centerRatioY) - (imageViewerFrame.clientHeight / 2);
+      });
+    }
+
+    function setImageViewerZoom(isZoomed) {
+      imageViewerFrame.classList.remove("is-dragging");
+      isDraggingZoomedImage = false;
+      hasDraggedZoomedImage = false;
+      suppressNextImageClick = false;
+
+      if (isZoomed) {
+        applyImageZoomLevel(selectedZoomLevel);
+        return;
+      }
+
+      imageViewerFrame.classList.remove("is-zoomed");
+      imageViewerImg.style.width = "";
+      imageViewerImg.title = "Click to zoom in";
+      currentZoomLevel = minZoomLevel;
+      fitImageWidth = 0;
+      updateZoomControlDisplay(false);
+      if (!isZoomed) {
+        imageViewerFrame.scrollTop = 0;
+        imageViewerFrame.scrollLeft = 0;
+      }
+    }
+
+    function renderImageViewerImage(index) {
+      currentImageIndex = (index + imageTriggers.length) % imageTriggers.length;
+      const trigger = imageTriggers[currentImageIndex];
+      const image = trigger.querySelector("img");
+
+      imageViewerImg.src = trigger.dataset.full;
+      imageViewerImg.alt = image.alt;
+      
+      const captionKey = trigger.getAttribute("data-i18n-caption");
+      const dictionary = translations[getActiveLanguage()] || translations.en;
+      imageViewerCaptionText.textContent = dictionary[captionKey] || trigger.dataset.caption || image.alt;
+      
+      let ofText = "of";
+      if (getActiveLanguage() === "pt-br") ofText = "de";
+      else if (getActiveLanguage() === "es") ofText = "de";
+      imageViewerCount.textContent = `${currentImageIndex + 1} ${ofText} ${imageTriggers.length}`;
+      
+      imageViewerFrame.scrollTop = 0;
+      imageViewerFrame.scrollLeft = 0;
+      setImageViewerZoom(false);
+    }
+
+    function openImageViewer(trigger) {
+      lastFocusedImageTrigger = trigger;
+      renderImageViewerImage(imageTriggers.indexOf(trigger));
+      imageViewer.classList.add("is-open");
+      imageViewer.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      imageViewerNext.focus();
+    }
+
+    function closeImageViewer() {
+      imageViewer.classList.remove("is-open");
+      imageViewer.setAttribute("aria-hidden", "true");
+      imageViewerImg.src = "";
+      imageViewerCaptionText.textContent = "";
+      imageViewerCount.textContent = "";
+      setImageViewerZoom(false);
+      document.body.style.overflow = "";
+
+      if (lastFocusedImageTrigger) {
+        lastFocusedImageTrigger.focus();
+      }
+    }
+
+    function showPreviousImage() {
+      renderImageViewerImage(currentImageIndex - 1);
+    }
+
+    function showNextImage() {
+      renderImageViewerImage(currentImageIndex + 1);
+    }
+
+    imageTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => openImageViewer(trigger));
+    });
+
+    imageViewerClose.addEventListener("click", closeImageViewer);
+    imageViewerPrev.addEventListener("click", showPreviousImage);
+    imageViewerNext.addEventListener("click", showNextImage);
+
+    imageViewerZoomInput.addEventListener("input", () => {
+      const nextZoomLevel = Number(imageViewerZoomInput.value) / 100;
+
+      if (nextZoomLevel <= minZoomLevel) {
+        setImageViewerZoom(false);
+        return;
+      }
+
+      const centerRatioX = (imageViewerFrame.scrollLeft + imageViewerFrame.clientWidth / 2) / imageViewerFrame.scrollWidth;
+      const centerRatioY = (imageViewerFrame.scrollTop + imageViewerFrame.clientHeight / 2) / imageViewerFrame.scrollHeight;
+      applyImageZoomLevel(nextZoomLevel, centerRatioX, centerRatioY);
+    });
+
+    imageViewerZoomButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const currentLevel = imageViewerFrame.classList.contains("is-zoomed") ? currentZoomLevel : minZoomLevel;
+        const nextZoomLevel = currentLevel + (Number(button.dataset.zoomStep) / 100);
+
+        if (nextZoomLevel <= minZoomLevel) {
+          setImageViewerZoom(false);
+          return;
+        }
+
+        const centerRatioX = (imageViewerFrame.scrollLeft + imageViewerFrame.clientWidth / 2) / imageViewerFrame.scrollWidth;
+        const centerRatioY = (imageViewerFrame.scrollTop + imageViewerFrame.clientHeight / 2) / imageViewerFrame.scrollHeight;
+        applyImageZoomLevel(nextZoomLevel, centerRatioX, centerRatioY);
+      });
+    });
+
+    imageViewerImg.addEventListener("pointerdown", (event) => {
+      if (!imageViewerFrame.classList.contains("is-zoomed")) {
+        return;
+      }
+
+      isDraggingZoomedImage = true;
+      hasDraggedZoomedImage = false;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      dragStartScrollLeft = imageViewerFrame.scrollLeft;
+      dragStartScrollTop = imageViewerFrame.scrollTop;
+      imageViewerFrame.classList.add("is-dragging");
+      imageViewerImg.setPointerCapture(event.pointerId);
+    });
+
+    imageViewerImg.addEventListener("pointermove", (event) => {
+      if (!isDraggingZoomedImage) {
+        return;
+      }
+
+      const deltaX = event.clientX - dragStartX;
+      const deltaY = event.clientY - dragStartY;
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        hasDraggedZoomedImage = true;
+      }
+
+      imageViewerFrame.scrollLeft = dragStartScrollLeft - deltaX;
+      imageViewerFrame.scrollTop = dragStartScrollTop - deltaY;
+    });
+
+    imageViewerImg.addEventListener("pointerup", (event) => {
+      if (!isDraggingZoomedImage) {
+        return;
+      }
+
+      suppressNextImageClick = hasDraggedZoomedImage;
+      isDraggingZoomedImage = false;
+      hasDraggedZoomedImage = false;
+      imageViewerFrame.classList.remove("is-dragging");
+
+      if (imageViewerImg.hasPointerCapture(event.pointerId)) {
+        imageViewerImg.releasePointerCapture(event.pointerId);
+      }
+    });
+
+    imageViewerImg.addEventListener("pointercancel", (event) => {
+      isDraggingZoomedImage = false;
+      hasDraggedZoomedImage = false;
+      imageViewerFrame.classList.remove("is-dragging");
+
+      if (imageViewerImg.hasPointerCapture(event.pointerId)) {
+        imageViewerImg.releasePointerCapture(event.pointerId);
+      }
+    });
+
+    imageViewerImg.addEventListener("click", (event) => {
+      if (suppressNextImageClick) {
+        suppressNextImageClick = false;
+        return;
+      }
+
+      const shouldZoom = !imageViewerFrame.classList.contains("is-zoomed");
+
+      if (!shouldZoom) {
+        setImageViewerZoom(false);
+        return;
+      }
+
+      const frameRect = imageViewerFrame.getBoundingClientRect();
+      const clickRatioX = (event.clientX - frameRect.left + imageViewerFrame.scrollLeft) / imageViewerFrame.scrollWidth;
+      const clickRatioY = (event.clientY - frameRect.top + imageViewerFrame.scrollTop) / imageViewerFrame.scrollHeight;
+      applyImageZoomLevel(selectedZoomLevel, clickRatioX, clickRatioY);
+    });
+
+    imageViewer.addEventListener("click", (event) => {
+      if (event.target === imageViewer) {
+        closeImageViewer();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (!imageViewer.classList.contains("is-open")) {
+        return;
+      }
+
+      if (event.key === "Escape") {
+        closeImageViewer();
+      } else if (event.key === "ArrowLeft") {
+        showPreviousImage();
+      } else if (event.key === "ArrowRight") {
+        showNextImage();
+      }
+    });
+  </script>
+</body>
+</html>
