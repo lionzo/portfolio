@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="description" content="How Marcelo Lionço Mendes helped redesign class discovery and scheduling for Fluency Academy." />
+  <meta property="og:title" content="Fluency Academy — Class Scheduling Flow" />
+  <meta property="og:description" content="How Marcelo Lionço Mendes helped redesign class discovery and scheduling for Fluency Academy." />
+  <meta property="og:type" content="website" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Class Scheduling Flow — Marcelo Lionço Mendes</title>
   <link rel="icon" type="image/png" href="./assets/favicon.png">
@@ -1223,12 +1227,28 @@
       font-weight: 500;
       background: var(--accent-glow);
     }
+
+    /* Readable content remains the default if scripts or storage are unavailable. */
+    .reveal { opacity: 1; transform: none; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--accent); outline-offset: 4px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important; transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
   <script src="translations.js"></script>
   <script>
-    document.documentElement.style.visibility = 'hidden';
+    const safeStorage = {
+      getItem(key) { try { return localStorage.getItem(key); } catch { return null; } },
+      setItem(key, value) { try { localStorage.setItem(key, value); } catch {} }
+    };
+
     (function() {
-      const savedLang = localStorage.getItem("portfolio-lang");
+      const savedLang = safeStorage.getItem("portfolio-lang");
       let lang = "en";
       if (savedLang) {
         lang = savedLang;
@@ -1249,7 +1269,7 @@
       <ul class="nav-links">
         <li><a href="index.html#work" class="nav-back" data-i18n="cs_back_to_work">Back to work</a></li>
         <li><a href="#results" data-i18n="cs_results">Results</a></li>
-        <li><a href="#contact" class="nav-cta" data-i18n="nav_contact">Get in touch</a></li>
+        <li><a href="index.html#contact" class="nav-cta" data-i18n="nav_contact">Get in touch</a></li>
       </ul>
       <div class="lang-selector">
         <button class="lang-toggle-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
@@ -1613,7 +1633,7 @@
 
   <footer class="footer">
     <div class="footer-shell">
-      <span data-i18n="footer_copyright">© 2025 Marcelo Lionço Mendes</span>
+      <span data-i18n="footer_copyright">© 2026 Marcelo Lionço Mendes</span>
       <span data-i18n="footer_built">Designed &amp; built with care · Curitiba, Brazil</span>
     </div>
   </footer>
@@ -1634,12 +1654,12 @@
         </p>
         <div class="image-viewer-actions">
           <div class="image-viewer-zoom" data-i18n-aria-label="cs_viewer_zoom" aria-label="Zoom controls">
-            <button class="image-viewer-zoom-button" type="button" data-zoom-step="-25" data-i18n-aria-label="cs_prev_image" aria-label="Zoom out">-</button>
+            <button class="image-viewer-zoom-button" type="button" data-zoom-step="-25" data-i18n-aria-label="cs_zoom_out" aria-label="Zoom out">-</button>
             <label class="image-viewer-zoom-label" for="imageViewerZoom">
               <span data-i18n="cs_viewer_zoom">Zoom</span> <span id="imageViewerZoomValue">Fit</span>
             </label>
             <input id="imageViewerZoom" type="range" min="100" max="300" step="25" value="100" data-i18n-aria-label="cs_viewer_zoom" aria-label="Zoom level" />
-            <button class="image-viewer-zoom-button" type="button" data-zoom-step="25" data-i18n-aria-label="cs_next_image" aria-label="Zoom in">+</button>
+            <button class="image-viewer-zoom-button" type="button" data-zoom-step="25" data-i18n-aria-label="cs_zoom_in" aria-label="Zoom in">+</button>
           </div>
           <button class="image-viewer-close" type="button" data-i18n="cs_viewer_close">Close</button>
         </div>
@@ -1665,6 +1685,7 @@
     const minZoomLevel = Number(imageViewerZoomInput.min) / 100;
     const maxZoomLevel = Number(imageViewerZoomInput.max) / 100;
     let lastFocusedImageTrigger = null;
+    let backgroundInertState = [];
     let currentImageIndex = 0;
     let selectedZoomLevel = defaultZoomLevel;
     let currentZoomLevel = minZoomLevel;
@@ -1680,7 +1701,7 @@
     // Theme logic
     const themeToggle = document.querySelector(".theme-toggle");
     const themeToggleText = document.querySelector(".theme-toggle-text");
-    const savedTheme = localStorage.getItem("portfolio-theme");
+    const savedTheme = safeStorage.getItem("portfolio-theme");
     const initialTheme = savedTheme || "light";
 
     function applyTheme(theme) {
@@ -1690,10 +1711,10 @@
       
       const currentLang = getActiveLanguage();
       const themeKey = theme === "light" ? "theme_dark" : "theme_light";
-      const dict = translations[currentLang] || translations.en;
+      const dict = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
       themeToggleText.textContent = dict[themeKey] || (theme === "light" ? "Dark" : "Light");
       
-      localStorage.setItem("portfolio-theme", theme);
+      safeStorage.setItem("portfolio-theme", theme);
     }
 
     applyTheme(initialTheme);
@@ -1704,7 +1725,7 @@
 
     // Translation logic
     function getActiveLanguage() {
-      const savedLang = localStorage.getItem("portfolio-lang");
+      const savedLang = safeStorage.getItem("portfolio-lang");
       if (savedLang) return savedLang;
       
       const browserLang = navigator.language || navigator.userLanguage || "en";
@@ -1719,7 +1740,7 @@
     }
 
     function translatePage(lang) {
-      const dictionary = translations[lang] || translations.en;
+      const dictionary = (window.translations || {})[lang] || (window.translations || {}).en || {};
       
       // Update document language attribute
       document.documentElement.lang = lang === "pt-br" ? "pt-BR" : lang;
@@ -1799,7 +1820,7 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const selectedLang = btn.getAttribute("data-lang");
-        localStorage.setItem("portfolio-lang", selectedLang);
+        safeStorage.setItem("portfolio-lang", selectedLang);
         translatePage(selectedLang);
         closeLangDropdown();
       });
@@ -1822,7 +1843,7 @@
     // Initialize translations and display page
     const activeLang = getActiveLanguage();
     translatePage(activeLang);
-    document.documentElement.style.visibility = 'visible';
+
 
     // Reveals observer
     const reveals = document.querySelectorAll(".reveal");
@@ -1909,7 +1930,7 @@
       imageViewerImg.alt = image.alt;
       
       const captionKey = trigger.getAttribute("data-i18n-caption");
-      const dictionary = translations[getActiveLanguage()] || translations.en;
+      const dictionary = (window.translations || {})[getActiveLanguage()] || (window.translations || {}).en || {};
       imageViewerCaptionText.textContent = dictionary[captionKey] || trigger.dataset.caption || image.alt;
       
       let ofText = "of";
@@ -1928,7 +1949,11 @@
       imageViewer.classList.add("is-open");
       imageViewer.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
-      imageViewerNext.focus();
+      backgroundInertState = Array.from(document.body.children)
+        .filter(element => element !== imageViewer && element.tagName !== 'SCRIPT')
+        .map(element => [element, element.inert]);
+      backgroundInertState.forEach(([element]) => { element.inert = true; });
+      imageViewerClose.focus();
     }
 
     function closeImageViewer() {
@@ -1940,6 +1965,8 @@
       setImageViewerZoom(false);
       document.body.style.overflow = "";
 
+      backgroundInertState.forEach(([element, wasInert]) => { element.inert = wasInert; });
+      backgroundInertState = [];
       if (lastFocusedImageTrigger) {
         lastFocusedImageTrigger.focus();
       }
@@ -2076,7 +2103,17 @@
         return;
       }
 
-      if (event.key === "Escape") {
+      if (event.key === "Tab") {
+        const controls = Array.from(imageViewer.querySelectorAll('button, input, [tabindex="0"]'))
+          .filter(element => !element.disabled && element.getClientRects().length);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault(); first.focus();
+        }
+      } else if (event.key === "Escape") {
+        event.preventDefault();
         closeImageViewer();
       } else if (event.key === "ArrowLeft") {
         showPreviousImage();
@@ -2087,3 +2124,4 @@
   </script>
 </body>
 </html>
+
