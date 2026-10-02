@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="description" content="Product Designer creating clear web and mobile experiences through research, interaction design and collaboration with product and engineering." />
+  <meta property="og:title" content="Marcelo Lionço Mendes — Product Designer" />
+  <meta property="og:description" content="Product Designer creating clear web and mobile experiences through research, interaction design and collaboration with product and engineering." />
+  <meta property="og:type" content="website" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <link rel="apple-touch-icon" href="./assets/favicon.png">
@@ -1013,12 +1017,40 @@
       font-weight: 500;
       background: var(--accent-glow);
     }
+
+    /* Readable content remains the default if scripts or storage are unavailable. */
+    .reveal { opacity: 1; transform: none; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--accent); outline-offset: 4px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important; transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    .project-cover { display: block; width: 100%; height: auto; border-radius: 12px; }
+    .about-stats { grid-template-columns: repeat(3, 1fr); }
+    .hero-subtitle { max-width: 720px; }
+    @media (max-width: 900px) {
+      nav { flex-wrap: wrap; gap: 12px; }
+      .nav-actions { display: contents; }
+      .nav-links { display: flex; gap: 16px; order: 3; width: 100%; justify-content: center; }
+      .nav-links li:has(a[href="#about"]), .nav-links li:has(a[href="#experience"]) { display: none; }
+      .hero { padding-top: 150px; }
+    }
+    @media (max-width: 600px) { .about-stats { grid-template-columns: 1fr; } }
   </style>
   <script src="translations.js"></script>
   <script>
-    document.documentElement.style.visibility = 'hidden';
+    const safeStorage = {
+      getItem(key) { try { return localStorage.getItem(key); } catch { return null; } },
+      setItem(key, value) { try { localStorage.setItem(key, value); } catch {} }
+    };
+
     (function() {
-      const savedLang = localStorage.getItem("portfolio-lang");
+      const savedLang = safeStorage.getItem("portfolio-lang");
       let lang = "en";
       if (savedLang) {
         lang = savedLang;
@@ -1039,9 +1071,7 @@
       <ul class="nav-links">
         <li><a href="#about" data-i18n="nav_about">About</a></li>
         <li><a href="#work" data-i18n="nav_work">Work</a></li>
-        <li><a href="#process" data-i18n="nav_process">Process</a></li>
         <li><a href="#experience" data-i18n="nav_experience">Experience</a></li>
-        <li><a href="#skills" data-i18n="nav_skills">Skills</a></li>
         <li><a href="#contact" class="nav-cta" data-i18n="nav_contact">Get in touch</a></li>
       </ul>
       <div class="lang-selector">
@@ -1075,15 +1105,14 @@
       <span data-i18n="hero_badge">Available for new opportunities</span>
     </div>
 
-    <h1 data-i18n="hero_title">Designing clear<br /><em>experiences.</em></h1>
+    <p class="section-label" data-i18n="hero_role">Product Designer</p>
+    <h1 data-i18n="hero_title">Marcelo Lionço<br /><em>Mendes.</em></h1>
 
-    <p class="hero-subtitle" data-i18n="hero_subtitle">
-      Product Designer with 6+ years of experience creating user-centered flows,<br />wireframes, and scalable interfaces for web and mobile products.
-    </p>
+    <p class="hero-subtitle" data-i18n="hero_subtitle">Product Designer with 6+ years of experience simplifying complex workflows for web and mobile products, working closely with product and engineering teams.</p>
 
     <div class="hero-actions">
       <a href="#work" class="btn-primary" data-i18n="hero_cta_work">View selected work</a>
-      <a href="#process" class="btn-secondary" data-i18n="hero_cta_process">See design process</a>
+      <a href="#contact" class="btn-secondary" data-i18n="hero_cta_process">Get in touch</a>
     </div>
 
     <div class="hero-scroll" aria-hidden="true">
@@ -1091,45 +1120,6 @@
       <span data-i18n="hero_scroll">Scroll</span>
     </div>
   </div>
-
-  <section id="about">
-    <div class="about-grid">
-      <div class="about-image-wrap reveal">
-        <img src="assets/profile-photo.jpeg" alt="Marcelo Lionço Mendes smiling" />
-        <div class="about-glow" aria-hidden="true"></div>
-      </div>
-
-      <div>
-        <p class="section-label reveal" data-i18n="about_label">About</p>
-        <h2 class="section-title reveal reveal-delay-1" data-i18n="about_title">Bringing clarity<br /><em>to complexity.</em></h2>
-        <p class="section-body reveal reveal-delay-2" data-i18n="about_body_1">
-          My background spans projects in finance, banking, content platforms, and digital products with complex workflows. I focus on turning business requirements and user needs into structured flows, intuitive interfaces, and scalable product experiences.
-        </p>
-        <p class="section-body reveal reveal-delay-2" style="margin-top: 16px;" data-i18n="about_body_2">
-          I started by working across a wide range of products, which helped me build versatility across industries and user needs. Today, my work centers on UX problem solving, interaction design, high-fidelity UI, design systems, and close collaboration with product and engineering teams.
-        </p>
-
-        <div class="about-stats">
-          <div class="stat-card reveal reveal-delay-1">
-            <div class="stat-number" data-i18n="stat_years_num">6+</div>
-            <div class="stat-label" data-i18n="stat_years_label">Years of experience</div>
-          </div>
-          <div class="stat-card reveal reveal-delay-2">
-            <div class="stat-number" data-i18n="stat_companies_num">3</div>
-            <div class="stat-label" data-i18n="stat_companies_label">Companies shaped</div>
-          </div>
-          <div class="stat-card reveal reveal-delay-2">
-            <div class="stat-number" data-i18n="stat_us_num">🇺🇸</div>
-            <div class="stat-label" data-i18n="stat_us_label">Working with US clients</div>
-          </div>
-          <div class="stat-card reveal reveal-delay-3">
-            <div class="stat-number" data-i18n="stat_figma_num">∞</div>
-            <div class="stat-label" data-i18n="stat_figma_label">Figma components built</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <div class="work-section" id="work">
     <div class="work-header">
@@ -1147,20 +1137,7 @@
         <div class="project-visual" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);">
           <span class="tag" data-i18n="project_fa_company">Fluency Academy</span>
           <div class="project-visual-inner">
-            <!--- <img src="assets/entry-point-after.png" alt="Calendar applied on the Fluency Talks interface." /> --->
-            <div class="mock-ui">
-              <div class="mock-bar accent"></div>
-              <div class="mock-bar long" style="margin-bottom: 14px;"></div>
-              <div class="mock-cards">
-                <div class="mock-card-item"></div>
-                <div class="mock-card-item" style="background: rgba(10,132,255,0.2);"></div>
-                <div class="mock-card-item"></div>
-              </div>
-              <div style="margin-top: 12px;">
-                <div class="mock-bar short"></div>
-                <div class="mock-bar medium"></div>
-              </div>
-            </div>
+            <img class="project-cover" src="assets/entry-point-after.png" alt="Redesigned Fluency Talks calendar and class discovery interface" loading="lazy" />
           </div>
         </div>
         <div class="project-info">
@@ -1172,7 +1149,7 @@
             </p>
             <div class="project-tags">
               <span class="tag-pill" data-i18n="project_fa_tag1">UX Research</span>
-              <span class="tag-pill" data-i18n="project_fa_tag2">Figma</span>
+              <span class="tag-pill" data-i18n="project_fa_tag2">Edtech</span>
               <span class="tag-pill" data-i18n="project_fa_tag3">Prototyping</span>
               <span class="tag-pill" data-i18n="project_fa_tag4">Design System</span>
             </div>
@@ -1186,100 +1163,41 @@
         </div>
       </a>
 
-      <div class="small-projects">
-        <a href="#" class="project-card reveal" aria-label="Chop Dawg client product design">
-          <div class="project-visual" style="background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%); aspect-ratio: 16/9;">
-            <span class="tag" data-i18n="project_cd_company">Chop Dawg</span>
-            <div class="project-visual-inner" style="width: 70%;">
-              <div class="mock-ui">
-                <div class="mock-bar accent"></div>
-                <div class="mock-bar medium"></div>
-                <div class="mock-bar short"></div>
-              </div>
-            </div>
-          </div>
-          <div class="project-info">
-            <div>
-              <p class="project-company" data-i18n="project_cd_company">Chop Dawg</p>
-              <h3 class="project-title" style="font-size: 20px;" data-i18n="project_cd_title">Client Product Design</h3>
-              <p class="project-desc" style="font-size: 14px;" data-i18n="project_cd_desc">End-to-end product design for US-based startups, translating complex requirements into clear flows and high-fidelity delivery.</p>
-            </div>
-            <span class="project-arrow" style="font-size: 13px;">
-              <span data-i18n="project_cd_cta">Coming soon</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
-          </div>
-        </a>
-
-        <a href="#" class="project-card reveal reveal-delay-1" aria-label="Pixelwolf interface design systems">
-          <div class="project-visual" style="background: linear-gradient(135deg, #0d1f0d 0%, #1a3a1a 100%); aspect-ratio: 16/9;">
-            <span class="tag" data-i18n="project_pw_company">Pixelwolf</span>
-            <div class="project-visual-inner" style="width: 70%;">
-              <div class="mock-ui">
-                <div class="mock-bar" style="background: rgba(48,209,88,0.4); width: 50%;"></div>
-                <div class="mock-bar medium"></div>
-                <div class="mock-bar long"></div>
-              </div>
-            </div>
-          </div>
-          <div class="project-info">
-            <div>
-              <p class="project-company" style="color: var(--green);" data-i18n="project_pw_company">Pixelwolf</p>
-              <h3 class="project-title" style="font-size: 20px;" data-i18n="project_pw_title">Scalable Interface Systems</h3>
-              <p class="project-desc" style="font-size: 14px;" data-i18n="project_pw_desc">Built reusable components, visual patterns, and handoff guidelines for web and mobile platforms across multiple client projects.</p>
-            </div>
-            <span class="project-arrow" style="font-size: 13px;">
-              <span data-i18n="project_pw_cta">Coming soon</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
-          </div>
-        </a>
-      </div>
     </div>
   </div>
 
-  <div class="process-section" id="process">
-    <div class="process-layout">
+  <section id="about">
+    <div class="about-grid">
+      <div class="about-image-wrap reveal">
+        <img src="assets/profile-photo.jpeg" alt="Marcelo Lionço Mendes smiling" />
+        <div class="about-glow" aria-hidden="true"></div>
+      </div>
+
       <div>
-        <p class="section-label reveal" data-i18n="process_label">How I Work</p>
-        <h2 class="section-title reveal reveal-delay-1" data-i18n="process_title">Structured process,<br /><em>practical outcomes.</em></h2>
-        <p class="section-body reveal reveal-delay-2" data-i18n="process_body">
-          My process adapts to each project, but the goal stays consistent: understand the problem clearly, reduce friction in the experience, and make decisions that work for users, business goals, and implementation realities.
+        <p class="section-label reveal" data-i18n="about_label">About</p>
+        <h2 class="section-title reveal reveal-delay-1" data-i18n="about_title">Bringing clarity<br /><em>to complexity.</em></h2>
+        <p class="section-body reveal reveal-delay-2" data-i18n="about_body_1">
+          My background spans projects in finance, banking, content platforms, and digital products with complex workflows. I focus on turning business requirements and user needs into structured flows, intuitive interfaces, and scalable product experiences.
         </p>
-      </div>
+        <p class="section-body reveal reveal-delay-2" style="margin-top: 16px;" data-i18n="about_body_2">I work across research, interaction design, reusable UI components, and engineering handoff, collaborating with US-based clients and distributed teams.</p>
 
-      <div class="process-list">
-        <div class="process-step reveal">
-          <div>
-            <h3 data-i18n="process_step1_title">Understand the problem</h3>
-            <p data-i18n="process_step1_desc">Frame the business goal, user need, constraints, and success criteria before moving into interface decisions.</p>
+        <div class="about-stats">
+          <div class="stat-card reveal reveal-delay-1">
+            <div class="stat-number" data-i18n="stat_years_num">6+</div>
+            <div class="stat-label" data-i18n="stat_years_label">Years of experience</div>
           </div>
-        </div>
-        <div class="process-step reveal reveal-delay-1">
-          <div>
-            <h3 data-i18n="process_step2_title">Map flows and friction points</h3>
-            <p data-i18n="process_step2_desc">Structure information architecture, user journeys, and interaction paths to identify where complexity needs to be simplified.</p>
+          <div class="stat-card reveal reveal-delay-2">
+            <div class="stat-number" data-i18n="stat_companies_num">3</div>
+            <div class="stat-label" data-i18n="stat_companies_label">Companies worked with</div>
           </div>
-        </div>
-        <div class="process-step reveal reveal-delay-2">
-          <div>
-            <h3 data-i18n="process_step3_title">Explore and validate interactions</h3>
-            <p data-i18n="process_step3_desc">Move from wireframes to prototypes, using feedback and usability signals to refine the experience before handoff.</p>
-          </div>
-        </div>
-        <div class="process-step reveal reveal-delay-3">
-          <div>
-            <h3 data-i18n="process_step4_title">Design for scale and implementation</h3>
-            <p data-i18n="process_step4_desc">Build high-fidelity solutions with reusable components, clear documentation, and close collaboration with engineering teams.</p>
+          <div class="stat-card reveal reveal-delay-2">
+            <div class="stat-number" data-i18n="stat_us_num">🇺🇸</div>
+            <div class="stat-label" data-i18n="stat_us_label">Working with US clients</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <div class="experience-section" id="experience">
     <p class="section-label reveal" data-i18n="experience_label">Experience</p>
@@ -1329,44 +1247,6 @@
     </div>
   </div>
 
-  <div class="skills-section" id="skills">
-    <p class="section-label reveal" data-i18n="skills_label">Skills</p>
-        <h2 class="section-title reveal reveal-delay-1" data-i18n="skills_title">Core<br /><em>strengths.</em></h2>
-
-    <div class="skills-grid">
-      <div class="skill-card reveal">
-        <div class="skill-icon">✦</div>
-        <h3 data-i18n="skills_item1_title">Product Flows</h3>
-        <p data-i18n="skills_item1_desc">Mapping journeys, reducing unnecessary steps, and creating interaction paths that help users complete tasks with clarity.</p>
-      </div>
-      <div class="skill-card reveal reveal-delay-1">
-        <div class="skill-icon">◈</div>
-        <h3 data-i18n="skills_item2_title">Design Systems</h3>
-        <p data-i18n="skills_item2_desc">Building scalable components, reusable patterns, and documentation that help teams ship faster and more consistently.</p>
-      </div>
-      <div class="skill-card reveal reveal-delay-2">
-        <div class="skill-icon">⬡</div>
-        <h3 data-i18n="skills_item3_title">UX Problem Solving</h3>
-        <p data-i18n="skills_item3_desc">User interviews, usability testing, journey mapping, and data analysis to turn ambiguous problems into actionable decisions.</p>
-      </div>
-      <div class="skill-card reveal reveal-delay-1">
-        <div class="skill-icon">◎</div>
-        <h3 data-i18n="skills_item4_title">Interaction Design</h3>
-        <p data-i18n="skills_item4_desc">Wireframes and interactive prototypes that clarify behavior, edge cases, and the intent behind each product flow.</p>
-      </div>
-      <div class="skill-card reveal reveal-delay-2">
-        <div class="skill-icon">⬟</div>
-        <h3 data-i18n="skills_item5_title">Product Thinking</h3>
-        <p data-i18n="skills_item5_desc">Balancing user needs, business objectives, and implementation constraints so design decisions lead to practical outcomes.</p>
-      </div>
-      <div class="skill-card reveal reveal-delay-3">
-        <div class="skill-icon">❖</div>
-        <h3 data-i18n="skills_item6_title">Collaboration</h3>
-        <p data-i18n="skills_item6_desc">Clear Figma files, component specifications, edge-case documentation, flow explanations, and direct engineering collaboration.</p>
-      </div>
-    </div>
-  </div>
-
   <div class="contact-section" id="contact">
     <p class="section-label reveal" data-i18n="contact_label">Contact</p>
         <h2 class="section-title reveal reveal-delay-1" data-i18n="contact_title">Let's build<br /><em>with clarity.</em></h2>
@@ -1396,7 +1276,7 @@
   </div>
 
   <footer>
-    <span data-i18n="footer_copyright">© 2025 Marcelo Lionço Mendes</span>
+    <span data-i18n="footer_copyright">© 2026 Marcelo Lionço Mendes</span>
     <span data-i18n="footer_built">Designed &amp; built with care · Curitiba, Brazil</span>
   </footer>
 
@@ -1404,7 +1284,7 @@
     // Theme logic
     const themeToggle = document.querySelector(".theme-toggle");
     const themeToggleText = document.querySelector(".theme-toggle-text");
-    const savedTheme = localStorage.getItem("portfolio-theme");
+    const savedTheme = safeStorage.getItem("portfolio-theme");
     const initialTheme = savedTheme || "light";
 
     function applyTheme(theme) {
@@ -1414,10 +1294,10 @@
       
       const currentLang = getActiveLanguage();
       const themeKey = theme === "light" ? "theme_dark" : "theme_light";
-      const dict = translations[currentLang] || translations.en;
+      const dict = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
       themeToggleText.textContent = dict[themeKey] || (theme === "light" ? "Dark" : "Light");
       
-      localStorage.setItem("portfolio-theme", theme);
+      safeStorage.setItem("portfolio-theme", theme);
     }
 
     applyTheme(initialTheme);
@@ -1428,7 +1308,7 @@
 
     // Translation logic
     function getActiveLanguage() {
-      const savedLang = localStorage.getItem("portfolio-lang");
+      const savedLang = safeStorage.getItem("portfolio-lang");
       if (savedLang) return savedLang;
       
       const browserLang = navigator.language || navigator.userLanguage || "en";
@@ -1443,7 +1323,7 @@
     }
 
     function translatePage(lang) {
-      const dictionary = translations[lang] || translations.en;
+      const dictionary = (window.translations || {})[lang] || (window.translations || {}).en || {};
       
       // Update document language attribute
       document.documentElement.lang = lang === "pt-br" ? "pt-BR" : lang;
@@ -1503,7 +1383,7 @@
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const selectedLang = btn.getAttribute("data-lang");
-        localStorage.setItem("portfolio-lang", selectedLang);
+        safeStorage.setItem("portfolio-lang", selectedLang);
         translatePage(selectedLang);
         closeLangDropdown();
       });
@@ -1526,7 +1406,7 @@
     // Initialize translations and display page
     const activeLang = getActiveLanguage();
     translatePage(activeLang);
-    document.documentElement.style.visibility = 'visible';
+
 
     // Reveals observer
     const reveals = document.querySelectorAll(".reveal");
@@ -1551,3 +1431,4 @@
   </script>
 </body>
 </html>
+
