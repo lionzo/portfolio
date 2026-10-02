@@ -1166,8 +1166,8 @@
       <a href="roots-to-hearts.html" class="project-card featured reveal" aria-label="Roots to Hearts product design case study">
         <div class="project-visual" style="background: #133c35; color: #f5eddf;">
           <span class="tag">Roots to Hearts</span>
-          <div class="project-visual-inner" style="padding: 24px; text-align: center;">
-            <span style="font-family: var(--serif); font-size: clamp(32px, 5vw, 52px); line-height: 1.2;">Roots<br />to Hearts</span>
+          <div class="project-visual-inner">
+            <img class="project-cover" src="assets/roots-to-hearts/image-01-hero-960.webp" width="960" height="540" loading="lazy" decoding="async" data-i18n-alt="rth_alt_01" alt="Roots to Hearts creator home, message details and recipient message screens" />
           </div>
         </div>
         <div class="project-info">
@@ -1357,6 +1357,11 @@
         if (dictionary[key]) {
           element.innerHTML = dictionary[key];
         }
+      });
+
+      document.querySelectorAll('[data-i18n-alt]').forEach(element => {
+        const value = dictionary[element.dataset.i18nAlt];
+        if (value) element.alt = value;
       });
 
       // Update current language indicator in UI
