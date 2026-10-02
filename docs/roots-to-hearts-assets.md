@@ -1,8 +1,8 @@
 # Roots to Hearts — image production briefs
 
-Status: editorial preparation for a draft portfolio case. No design exports were attached. The page uses a temporary typographic project cover and does not display these placeholders.
+Status: all nine supplied PNG visuals are integrated as responsive WebP images. Image 01 also replaces the temporary home cover. Original uploads remain unchanged.
 
-Before publication: obtain actual current exports, confirm disclosure of unreleased screens and details, use fictional account/message data, review the first-person reflection, and update completion status if necessary. The narrative describes July–September 2026 work and does not claim launch or usability results.
+Before publication: confirm that the supplied visuals match the current designs, confirm disclosure of unreleased screens and details, use fictional account/message data, review the first-person reflection, and update completion status if necessary. The narrative describes July–September 2026 work and does not claim launch or usability results.
 
 The sender account time zone in the supplied narrative supersedes the earlier recipient-time-zone specification. Planning personas must remain labeled as stakeholder-derived, not interview research.
 
